@@ -3,13 +3,18 @@ package com.learning.taskapi.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.learning.taskapi.model.Task;
+import com.learning.taskapi.dto.CreateTaskRequest;
+import com.learning.taskapi.dto.PutTaskRequest;
+import com.learning.taskapi.dto.TaskResponse;
+import com.learning.taskapi.dto.UpdateTaskRequest;
 import com.learning.taskapi.service.TaskService;
+
+import jakarta.validation.Valid;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,57 +36,52 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks(){
+    public ResponseEntity<List<TaskResponse>> getAllTasks(){
         return ResponseEntity.ok(
             taskService.getAllTasks()
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id){
-        return taskService
-        .getTaskById(id)
-        .map(ResponseEntity::ok)
-        .orElseGet(()->
-            ResponseEntity.notFound().build());
+    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id){
+        return ResponseEntity.ok(
+            taskService.getTaskById(id)
+        );
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task){
-        return ResponseEntity.ok(taskService.createTask(task));
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody CreateTaskRequest request){
+        
+        TaskResponse created = taskService.createTask(request);
+
+        return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task){
-        return taskService
-        .updateTask(id, task)
-        .map(ResponseEntity::ok)
-        .orElseGet(() ->
-        ResponseEntity.notFound().build());
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @Valid @RequestBody PutTaskRequest request){
+
+        return ResponseEntity.ok(
+            taskService.updateTask(id, request)
+        );
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Task> patchTask(@PathVariable Long id, @RequestBody Task task){
-        return taskService
-        .patchTask(id, task)
-        .map(ResponseEntity::ok)
-        .orElseGet(() ->
-        ResponseEntity.notFound().build());
-        
+    public ResponseEntity<TaskResponse> patchTask(@PathVariable Long id, @Valid @RequestBody UpdateTaskRequest request){
+
+        return ResponseEntity.ok(
+            taskService.patchTask(id, request)
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteTask(@PathVariable Long id){
-        boolean deleted = taskService.deleteTask(id);
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id){
 
-        if(!deleted){
-            return ResponseEntity
-            .notFound()
-            .build();
-        }
-        return ResponseEntity
-        .noContent()
-        .build();
+        taskService.deleteTask(id);
+
+        return ResponseEntity.noContent().build();
+
     }
     
 }
