@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import com.learning.taskapi.dto.CreateTaskRequest;
 import com.learning.taskapi.dto.PutTaskRequest;
 import com.learning.taskapi.dto.TaskResponse;
-import com.learning.taskapi.dto.UpdateTaskRequest;
+import com.learning.taskapi.dto.PatchTaskRequest;
 import com.learning.taskapi.exception.TaskNotFoundException;
 import com.learning.taskapi.model.Task;
 import com.learning.taskapi.repository.TaskRepository;
@@ -21,13 +21,27 @@ public class TaskService {
         this.taskRepository = taskRepository;
     }
 
+    //GENERACION DE RESPONSE
     private TaskResponse toResponse(Task task){
         return new TaskResponse(
             task.getId(),
             task.getTitle(),
-            task.getCompleted()
+            task.getDescription(),
+            task.getPriority(),
+            task.getCompleted(),
+            task.getCreatedAt(),
+            task.getUpdatedAt()
         );
     }
+
+    //Normalizacion de descripcion
+    private String normalizeDecription(String description){
+        if(description == null || description.isBlank()){
+            return null;
+        }
+        return description.trim();
+    }
+
 
     public List<TaskResponse> getAllTasks(){
         //return tasks;
@@ -51,10 +65,13 @@ public class TaskService {
 
     }
 
+    //CREATE
     public TaskResponse createTask(CreateTaskRequest request){
         Task task = new Task();
 
         task.setTitle(request.getTitle());
+        task.setDescription(normalizeDecription(request.getDescription()));
+        task.setPriority(request.getPriority());
         task.setCompleted(Boolean.TRUE.equals(request.getCompleted()));
 
         Task savedTask = taskRepository.save(task);
@@ -62,6 +79,7 @@ public class TaskService {
         return toResponse(savedTask);
     }
 
+    //UPDATE (PUT)
     public TaskResponse updateTask(Long id, PutTaskRequest request){
 
         Task task = taskRepository
@@ -71,6 +89,8 @@ public class TaskService {
                 );
                 
         task.setTitle(request.getTitle());
+        task.setDescription(normalizeDecription(request.getDescription()));
+        task.setPriority(request.getPriority());
         task.setCompleted(Boolean.TRUE.equals(request.getCompleted()));
 
         Task savedTask = taskRepository.save(task);
@@ -78,7 +98,8 @@ public class TaskService {
         return toResponse(savedTask);
     }
 
-    public TaskResponse patchTask(Long id, UpdateTaskRequest request){
+    //UPDATE (PATCH)
+    public TaskResponse patchTask(Long id, PatchTaskRequest request){
 
         Task task = taskRepository
                 .findById(id)
@@ -87,7 +108,14 @@ public class TaskService {
             );
 
         if(request.getTitle() != null){
-            task.setTitle(request.getTitle());
+            task.setTitle(request.getTitle().trim());
+        }
+        if(request.getDescription() != null){
+            this.normalizeDecription(request.getDescription());
+        }
+        if(request.getPriority() != null)
+        {
+            task.setPriority(request.getPriority());
         }
         if(request.getCompleted() != null){
             task.setCompleted(request.getCompleted());
@@ -98,6 +126,7 @@ public class TaskService {
         return toResponse(savedTask);
     }
 
+    // DELETE
     public void deleteTask(Long id){
        
         Task task = taskRepository

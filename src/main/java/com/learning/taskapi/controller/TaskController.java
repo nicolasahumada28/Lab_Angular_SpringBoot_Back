@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.learning.taskapi.dto.CreateTaskRequest;
 import com.learning.taskapi.dto.PutTaskRequest;
 import com.learning.taskapi.dto.TaskResponse;
-import com.learning.taskapi.dto.UpdateTaskRequest;
+import com.learning.taskapi.dto.PatchTaskRequest;
 import com.learning.taskapi.service.TaskService;
 
 import jakarta.validation.Valid;
@@ -35,6 +35,7 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    // GET
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks(){
         return ResponseEntity.ok(
@@ -42,6 +43,7 @@ public class TaskController {
         );
     }
 
+    // GET{id}
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id){
         return ResponseEntity.ok(
@@ -49,6 +51,7 @@ public class TaskController {
         );
     }
 
+    //POST
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody CreateTaskRequest request){
         
@@ -59,6 +62,7 @@ public class TaskController {
         .body(created);
     }
 
+    // PUT
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @Valid @RequestBody PutTaskRequest request){
 
@@ -67,14 +71,16 @@ public class TaskController {
         );
     }
 
+    // PATCH
     @PatchMapping("/{id}")
-    public ResponseEntity<TaskResponse> patchTask(@PathVariable Long id, @Valid @RequestBody UpdateTaskRequest request){
+    public ResponseEntity<TaskResponse> patchTask(@PathVariable Long id, @Valid @RequestBody PatchTaskRequest request){
 
         return ResponseEntity.ok(
             taskService.patchTask(id, request)
         );
     }
 
+    // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id){
 
