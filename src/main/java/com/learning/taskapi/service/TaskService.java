@@ -30,7 +30,8 @@ public class TaskService {
             task.getPriority(),
             task.getCompleted(),
             task.getCreatedAt(),
-            task.getUpdatedAt()
+            task.getUpdatedAt(),
+            task.getDueDate()
         );
     }
 
@@ -73,6 +74,7 @@ public class TaskService {
         task.setDescription(normalizeDecription(request.getDescription()));
         task.setPriority(request.getPriority());
         task.setCompleted(Boolean.TRUE.equals(request.getCompleted()));
+        task.setDueDate(request.getDueDate());
 
         Task savedTask = taskRepository.save(task);
 
@@ -92,6 +94,7 @@ public class TaskService {
         task.setDescription(normalizeDecription(request.getDescription()));
         task.setPriority(request.getPriority());
         task.setCompleted(Boolean.TRUE.equals(request.getCompleted()));
+        task.setDueDate(request.getDuedate());
 
         Task savedTask = taskRepository.save(task);
 

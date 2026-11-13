@@ -25,7 +25,7 @@ public class PutTaskRequest {
     @NotNull(message = "El estado completado es obligatorio")
     private Boolean completed;
 
-    private LocalDate duedate;
+    private LocalDate dueDate;
 
     public PutTaskRequest(){
 
@@ -64,10 +64,10 @@ public class PutTaskRequest {
     }
 
     public LocalDate getDuedate() {
-        return duedate;
+        return dueDate;
     }
 
-    public void setDuedate(LocalDate duedate) {
-        this.duedate = duedate;
+    public void setDuedate(LocalDate dueDate) {
+        this.dueDate = dueDate;
     }
 }
