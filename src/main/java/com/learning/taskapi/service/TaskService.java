@@ -1,92 +1,143 @@
 package com.learning.taskapi.service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.learning.taskapi.dto.CreateTaskRequest;
+import com.learning.taskapi.dto.PutTaskRequest;
+import com.learning.taskapi.dto.TaskResponse;
+import com.learning.taskapi.dto.PatchTaskRequest;
+import com.learning.taskapi.exception.TaskNotFoundException;
 import com.learning.taskapi.model.Task;
+import com.learning.taskapi.repository.TaskRepository;
 
 @Service 
-public class TaskService {
+public class TaskService {    
 
-    private final List<Task> tasks = new ArrayList<>();
+    private final TaskRepository taskRepository;
 
-    public TaskService(){
-        tasks.add(new Task(1L,"Estudiar Angular",true));
-        tasks.add(new Task(2L,"Estudiar SpringBoot",false));
-        tasks.add(new Task(3L,"Construir Aplicación Full Stack",false));
+    public TaskService(TaskRepository taskRepository){
+        this.taskRepository = taskRepository;
     }
 
-    public List<Task> getAllTasks(){
-        return tasks;
-    }
-
-    public Optional<Task> getTaskById(Long id){
-        return tasks.stream()
-            .filter(task -> task.getId().equals(id))
-            .findFirst();
-    }
-
-    public Task createTask(Task task){
-        Long nextId = getNextId();
-
-        Task newTask = new Task(
-            nextId,
+    //GENERACION DE RESPONSE
+    private TaskResponse toResponse(Task task){
+        return new TaskResponse(
+            task.getId(),
             task.getTitle(),
-            task.getCompleted()
+            task.getDescription(),
+            task.getPriority(),
+            task.getCompleted(),
+            task.getCreatedAt(),
+            task.getUpdatedAt(),
+            task.getDueDate()
+        );
+    }
+
+    //Normalizacion de descripcion
+    private String normalizeDecription(String description){
+        if(description == null || description.isBlank()){
+            return null;
+        }
+        return description.trim();
+    }
+
+
+    public List<TaskResponse> getAllTasks(){
+        //return tasks;
+
+        return taskRepository.findAll()
+                            .stream()
+                            .map(this::toResponse)
+                            .toList();
+
+    }
+
+    public TaskResponse getTaskById(Long id){
+
+         Task task = taskRepository
+            .findById(id)
+            .orElseThrow(() ->
+                new TaskNotFoundException(id)
         );
 
-        tasks.add(newTask);
-        return newTask;
+        return toResponse(task);
+
     }
 
-    public Optional<Task> updateTask(Long id, Task request){
-        Optional<Task> optionalTask = getTaskById(id);
+    //CREATE
+    public TaskResponse createTask(CreateTaskRequest request){
+        Task task = new Task();
 
-        if(optionalTask.isEmpty()){
-            return Optional.empty();
-        }
+        task.setTitle(request.getTitle());
+        task.setDescription(normalizeDecription(request.getDescription()));
+        task.setPriority(request.getPriority());
+        task.setCompleted(Boolean.TRUE.equals(request.getCompleted()));
+        task.setDueDate(request.getDueDate());
 
-        Task existingTask = optionalTask.get();
+        Task savedTask = taskRepository.save(task);
 
-        existingTask.setTitle(request.getTitle());
-        existingTask.setCompleted(request.getCompleted());
-
-        return Optional.of(existingTask);
+        return toResponse(savedTask);
     }
 
-    public Optional<Task> patchTask(Long id, Task request){
-        Optional<Task> optionalTask = getTaskById(id);
+    //UPDATE (PUT)
+    public TaskResponse updateTask(Long id, PutTaskRequest request){
 
-        if(optionalTask.isEmpty()){
-            return Optional.empty();
-        }
+        Task task = taskRepository
+                    .findById(id)
+                    .orElseThrow(() ->
+                    new TaskNotFoundException(id)
+                );
+                
+        task.setTitle(request.getTitle());
+        task.setDescription(normalizeDecription(request.getDescription()));
+        task.setPriority(request.getPriority());
+        task.setCompleted(Boolean.TRUE.equals(request.getCompleted()));
+        task.setDueDate(request.getDuedate());
 
-        Task existingTask = optionalTask.get();
+        Task savedTask = taskRepository.save(task);
+
+        return toResponse(savedTask);
+    }
+
+    //UPDATE (PATCH)
+    public TaskResponse patchTask(Long id, PatchTaskRequest request){
+
+        Task task = taskRepository
+                .findById(id)
+                .orElseThrow(() ->
+                new TaskNotFoundException(id)
+            );
 
         if(request.getTitle() != null){
-            existingTask.setTitle(request.getTitle());
+            task.setTitle(request.getTitle().trim());
         }
-
+        if(request.getDescription() != null){
+            this.normalizeDecription(request.getDescription());
+        }
+        if(request.getPriority() != null)
+        {
+            task.setPriority(request.getPriority());
+        }
         if(request.getCompleted() != null){
-            existingTask.setCompleted(request.getCompleted());
+            task.setCompleted(request.getCompleted());
         }
 
-        return Optional.of(existingTask);
+        Task savedTask = taskRepository.save(task);
+
+        return toResponse(savedTask);
     }
 
-    public boolean deleteTask(Long id){
-        return tasks.removeIf(
-            task -> task.getId().equals(id)
-        );
-    }
+    // DELETE
+    public void deleteTask(Long id){
+       
+        Task task = taskRepository
+                .findById(id)
+                .orElseThrow(() ->
+                new TaskNotFoundException(id)
+            );
 
-    private Long getNextId(){
-        return tasks.stream()
-        .map(Task::getId)
-        .max(Long::compareTo)
-        .orElse(0L) +1;
+        taskRepository.delete(task);
     }
 }
